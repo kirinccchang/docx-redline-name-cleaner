@@ -1,0 +1,1323 @@
+<!--
+  Redline Name Cleaner — Standardize reviewer names in Word redlines before circulation
+  Copyright (C) 2026 Kirin Chang <https://kirinchang.com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published
+  by the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU Affero General Public License for more details.
+
+  https://www.gnu.org/licenses/agpl-3.0.html
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Primary SEO -->
+  <title>Redline Name Cleaner — Review Identity Cleanup for Word</title>
+  <meta name="description" content="Standardize comment and tracked-change names in Word documents before external circulation. Fully client-side, private, and open source.">
+  <meta name="author" content="Kirin Chang">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://lawreview.tools/docx-redline-name-cleaner/">
+  <meta name="theme-color" content="#0C0C0B" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="lawreview.tools">
+  <meta property="og:title" content="Redline Name Cleaner — Review Identity Cleanup for Word">
+  <meta property="og:description" content="Standardize comment and tracked-change names in Word redlines before external circulation. 100% private and fully in-browser.">
+  <meta property="og:url" content="https://lawreview.tools/docx-redline-name-cleaner/">
+  <meta property="og:image" content="https://lawreview.tools/og-redline-name-cleaner.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Redline Name Cleaner — standardize Word review identities before sharing">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@chengchi_chang">
+  <meta name="twitter:creator" content="@chengchi_chang">
+  <meta name="twitter:title" content="Redline Name Cleaner — Review Identity Cleanup for Word">
+  <meta name="twitter:description" content="Standardize comment and tracked-change names in Word redlines before external circulation. 100% private and fully in-browser.">
+  <meta name="twitter:image" content="https://lawreview.tools/og-redline-name-cleaner.png">
+  <meta name="twitter:image:alt" content="Redline Name Cleaner — standardize Word review identities before sharing">
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Redline Name Cleaner",
+    "url": "https://lawreview.tools/docx-redline-name-cleaner/",
+    "description": "Standardize comment and tracked-change names in Word documents before external circulation. Fully client-side, private, and open source.",
+    "applicationCategory": "LegalApplication",
+    "applicationSubCategory": "Document Review",
+    "operatingSystem": "Windows, macOS, Linux",
+    "browserRequirements": "Requires a modern web browser with JavaScript enabled",
+    "featureList": [
+      "Standardizes comment and tracked-change names in .docx files",
+      "Processes multiple Word documents in one batch",
+      "Stores reusable replacement-name presets in your browser",
+      "Exports cleaned files individually or as a zip archive",
+      "100% client-side — files never leave your browser"
+    ],
+    "image": "https://lawreview.tools/og-redline-name-cleaner.png",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+    "author": { "@type": "Person", "name": "Kirin Chang", "url": "https://kirinchang.com" }
+  }
+  </script>
+
+  <script src="assets/vendor/jszip.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Theme tokens (matches PermaDrop / SupraDrop) ──────────────────── */
+    :root {
+      --bg:             #f4f4f5;
+      --surface:        #ffffff;
+      --border:         #e4e4e7;
+      --border-input:   #d4d4d8;
+      --text:           #18181b;
+      --text-2:         #3f3f46;
+      --text-muted:     #71717a;
+      --text-faint:     #a1a1aa;
+      --hover-bg:       #fafafa;
+      --preview-bg:     #f9fafb;
+      --divider:        #f4f4f5;
+      --privacy-bg:     #f0fdf4;
+      --privacy-border: #bbf7d0;
+      --privacy-text:   #166534;
+      --note-bg:        #fffbeb;
+      --note-border:    #fde68a;
+      --note-text:      #78350f;
+      --error-bg:       #fef2f2;
+      --error-border:   #fecaca;
+      --error-text:     #991b1b;
+      --warn-bg:        #fffbeb;
+      --warn-border:    #fde68a;
+      --warn-text:      #92400e;
+      --ok-bg:          #f0fdf4;
+      --ok-border:      #bbf7d0;
+      --ok-text:        #166534;
+      --info-bg:        #eff6ff;
+      --info-border:    #bfdbfe;
+      --info-text:      #1e40af;
+    }
+    body.dark {
+      --bg:             #09090b;
+      --surface:        #18181b;
+      --border:         #27272a;
+      --border-input:   #3f3f46;
+      --text:           #fafafa;
+      --text-2:         #d4d4d8;
+      --text-muted:     #a1a1aa;
+      --text-faint:     #71717a;
+      --hover-bg:       #1c1c1f;
+      --preview-bg:     #111113;
+      --divider:        #27272a;
+      --privacy-bg:     #052e16;
+      --privacy-border: #14532d;
+      --privacy-text:   #86efac;
+      --note-bg:        #1c1408;
+      --note-border:    #78350f;
+      --note-text:      #fde68a;
+      --error-bg:       #1f0a0a;
+      --error-border:   #7f1d1d;
+      --error-text:     #fca5a5;
+      --warn-bg:        #1c1408;
+      --warn-border:    #78350f;
+      --warn-text:      #fde68a;
+      --ok-bg:          #052e16;
+      --ok-border:      #14532d;
+      --ok-text:        #86efac;
+      --info-bg:        #172554;
+      --info-border:    #1e3a8a;
+      --info-text:      #93c5fd;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; transition: background 0.2s, color 0.2s;
+    }
+    .container { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; }
+    h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+    .phase-label { display: inline-block; font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; margin-bottom: 14px; }
+    .subtitle { font-size: 14px; color: var(--text-muted); margin-top: 6px; line-height: 1.6; }
+    .trust-signals { font-size: 12px; color: var(--text-muted); margin-top: 10px; display: flex; align-items: center; gap: 0; flex-wrap: wrap; letter-spacing: 0.01em; }
+    .trust-signals .tsep { margin: 0 7px; opacity: 0.35; }
+
+    /* Cards */
+    .card { background: var(--surface); border-radius: 10px; padding: 22px 24px; margin-top: 16px; border: 1px solid var(--border); }
+    .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .card-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .step-badge { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .step-badge.active   { background: var(--text); color: var(--surface); }
+    .step-badge.done     { background: #16a34a; color: white; }
+    .step-badge.inactive { background: var(--border); color: var(--text-faint); }
+
+    /* Buttons */
+    button {
+      padding: 6px 12px; border-radius: 7px; font-size: 12px; font-weight: 500;
+      cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+      color: var(--text-muted); transition: background 0.15s, opacity 0.15s;
+      font-family: inherit;
+    }
+    button:hover:not(:disabled) { background: var(--hover-bg); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary, button.primary {
+      background: var(--text); color: var(--surface); border-color: var(--text);
+      padding: 8px 16px; font-size: 13px;
+    }
+    .btn-primary:hover:not(:disabled), button.primary:hover:not(:disabled) { opacity: 0.85; }
+    .btn-primary:disabled, button.primary:disabled { background: var(--text-faint); border-color: var(--text-faint); cursor: not-allowed; opacity: 1; }
+    .btn-ghost {
+      background: transparent; color: var(--text-muted);
+      border: 1px solid var(--border); font-size: 12px; padding: 5px 10px;
+    }
+    .btn-ghost:hover:not(:disabled) { background: var(--hover-bg); }
+    .btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+    .dark-toggle { background: none; border: 1px solid var(--border); border-radius: 99px; padding: 4px 11px; font-size: 12px; color: var(--text-muted); cursor: pointer; }
+    .dark-toggle:hover { background: var(--hover-bg); }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed var(--border-input); border-radius: 8px; padding: 32px;
+      text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+      background: transparent; width: 100%; display: block;
+    }
+    .drop-zone:hover, .drop-zone.dragover { border-color: var(--text); background: var(--hover-bg); }
+    .drop-zone p { font-size: 14px; color: var(--text-muted); margin-top: 6px; }
+    .drop-zone strong { color: var(--text); font-size: 14px; display: block; }
+    .file-input { display: none; }
+
+    /* Privacy note */
+    .privacy-note { display: flex; align-items: flex-start; gap: 8px; background: var(--privacy-bg); border: 1px solid var(--privacy-border); border-radius: 7px; padding: 10px 13px; margin-top: 10px; }
+    .privacy-note p { font-size: 12px; color: var(--privacy-text); line-height: 1.5; }
+
+    /* Status messages */
+    .status { font-size: 13px; color: var(--text-muted); margin-top: 8px; min-height: 20px; line-height: 1.5; }
+    .status.err { color: #dc2626; }
+    .status.ok  { color: #16a34a; }
+
+    /* Callouts */
+    .callout { border-radius: 7px; border: 1px solid var(--border); padding: 10px 13px; font-size: 13px; line-height: 1.5; background: var(--preview-bg); color: var(--text-2); }
+    .callout strong { display: block; margin-bottom: 3px; font-size: 13px; font-weight: 600; }
+    .callout.info { background: var(--info-bg); border-color: var(--info-border); color: var(--info-text); }
+    .callout.warn { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+    .callout.ok   { background: var(--ok-bg);   border-color: var(--ok-border);   color: var(--ok-text); }
+
+    /* Misc */
+    .divider { height: 1px; background: var(--divider); margin: 14px 0; }
+    .hint { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .muted { color: var(--text-muted); }
+    .field-label { font-size: 13px; font-weight: 500; color: var(--text-2); margin-bottom: 5px; }
+    label { font-size: 12px; font-weight: 500; color: var(--text-2); display: block; margin-bottom: 4px; }
+
+    /* Inputs */
+    input[type=text], select {
+      width: 100%; padding: 8px 11px; border: 1px solid var(--border-input); border-radius: 7px;
+      font-size: 13px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+      background: var(--surface); color: var(--text); font-family: inherit;
+    }
+    input[type=text]:focus, select:focus { border-color: var(--text); box-shadow: 0 0 0 3px rgba(128,128,128,0.12); }
+
+    /* Input grid for preset form */
+    .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 480px) { .input-row { grid-template-columns: 1fr; } }
+
+    /* Toolbar rows */
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .toolbar-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    /* Preset list */
+    .preset-list { margin-top: 12px; display: grid; gap: 8px; }
+    .preset-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; background: var(--preview-bg); border: 1px solid var(--border); border-radius: 7px; font-size: 13px; flex-wrap: wrap; }
+    .preset-item strong { display: block; font-size: 13px; }
+    .preset-item .muted { font-size: 12px; margin-top: 1px; }
+
+    /* Document list */
+    .doc-list { display: grid; gap: 10px; }
+    .doc-empty { font-size: 13px; color: var(--text-muted); padding: 4px 0; line-height: 1.5; }
+    .doc-card { background: var(--preview-bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .doc-card summary { list-style: none; cursor: pointer; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .doc-card summary::-webkit-details-marker { display: none; }
+    .doc-card summary:hover { background: var(--hover-bg); }
+    .doc-heading { min-width: 0; flex: 1; }
+    .doc-title { font-size: 13px; font-weight: 600; word-break: break-word; }
+    .doc-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .doc-caret { font-size: 11px; color: var(--text-faint); border: 1px solid var(--border); border-radius: 5px; padding: 3px 8px; background: var(--surface); white-space: nowrap; flex-shrink: 0; }
+    .doc-card[open] .doc-caret::before { content: "Collapse"; }
+    .doc-card:not([open]) .doc-caret::before { content: "Expand"; }
+    .doc-body { padding: 0 14px 14px; display: grid; gap: 10px; border-top: 1px solid var(--border); padding-top: 14px; }
+
+    /* Mini toolbar inside doc cards */
+    .mini-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+    .mini-toolbar .field { flex: 1 1 200px; min-width: 0; }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px 11px; border-bottom: 1px solid var(--divider); text-align: left; vertical-align: top; }
+    th { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; background: var(--preview-bg); }
+    tbody tr:last-child td { border-bottom: none; }
+    .checkbox-cell { width: 80px; }
+    .checkbox-wrap { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; cursor: pointer; }
+    .count-cell { width: 70px; text-align: right; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+<script>
+(() => {
+  try {
+    const stored = window.localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const theme = stored || (prefersDark ? "dark" : "light");
+    if (theme === "dark") {
+      document.body.classList.add("dark");
+    }
+  } catch (error) {
+    // Ignore localStorage or media-query failures and fall back to light mode.
+  }
+})();
+</script>
+
+<div class="container">
+
+  <!-- ── Page Header ──────────────────────────────────────────────────── -->
+  <div style="margin-bottom: 28px;">
+    <div class="phase-label">Review Phase · Identity Cleanup</div>
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+      <h1>Redline Name Cleaner</h1>
+      <button class="dark-toggle" aria-label="Toggle dark mode">Dark mode</button>
+    </div>
+    <p class="subtitle">
+      Standardize comment and tracked-change author names in Word documents before you share them
+      externally — rename internal editors or research assistants into a clean outward-facing label
+      without sending a single file to any server.
+    </p>
+    <p class="trust-signals">
+      <span>Free &amp; open source</span><span class="tsep">·</span>
+      <span>100% in-browser</span><span class="tsep">·</span>
+      <span>Nothing uploaded</span><span class="tsep">·</span>
+      <span>Multiple files</span>
+    </p>
+    <p style="margin-top:8px; font-size:13px; color:var(--text-muted);">
+      <a href="https://github.com/kirinccchang/docx-redline-name-cleaner" target="_blank" rel="noopener noreferrer"
+         style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">
+        GitHub — source &amp; documentation (AGPL-3.0) →
+      </a>
+    </p>
+  </div>
+
+  <!-- ── Step 1: Upload ───────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge active">1</div>
+      <div class="card-title">Upload Word Document(s)</div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-left:auto;">
+        <button class="btn-ghost" id="addFilesBtn">Add files</button>
+        <button class="btn-ghost" id="downloadAllBtn">Download all</button>
+        <button class="btn-ghost" id="clearAllBtn">Clear all</button>
+      </div>
+    </div>
+
+    <button type="button" class="drop-zone" id="dropzone">
+      <strong>Click to choose or drag &amp; drop .docx files</strong>
+      <p>Multiple files allowed &mdash; files stay in your browser.</p>
+    </button>
+    <input type="file" id="fileInput" accept=".docx" multiple class="file-input">
+    <div id="uploadStatus" class="status" aria-live="polite"></div>
+
+    <div class="privacy-note">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="flex-shrink:0;margin-top:1px;" aria-hidden="true">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M10 1.667a5 5 0 0 1 5 5v1.666h.833A1.667 1.667 0 0 1 17.5 10v6.667A1.667 1.667 0 0 1 15.833 18H4.167A1.667 1.667 0 0 1 2.5 16.667V10a1.667 1.667 0 0 1 1.667-1.667H5V6.667a5 5 0 0 1 5-5Zm0 8.333a1.667 1.667 0 1 0 0 3.333A1.667 1.667 0 0 0 10 10Zm0-6.667A3.333 3.333 0 0 0 6.667 6.667v1.666h6.666V6.667A3.333 3.333 0 0 0 10 3.333Z" fill="currentColor"/>
+      </svg>
+      <p>Your documents are processed entirely in your browser. No file is ever uploaded to any server.</p>
+    </div>
+  </div>
+
+  <!-- ── Step 2: Presets ──────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge inactive">2</div>
+      <div class="card-title">Saved Presets</div>
+    </div>
+
+    <div class="input-row">
+      <div>
+        <div class="field-label">Preset label</div>
+        <input id="presetLabel" type="text" placeholder="e.g. James Madison" autocomplete="off">
+      </div>
+      <div>
+        <div class="field-label">Replacement name</div>
+        <input id="presetValue" type="text" placeholder="e.g. Princeton Law Review" autocomplete="off">
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px; flex-wrap:wrap;">
+      <p class="hint">Save a name you reuse often, then apply it per-file below.</p>
+      <button class="btn-primary" id="savePresetBtn">Save preset</button>
+    </div>
+    <div id="presetStatus" class="status" aria-live="polite"></div>
+    <div id="presetList" class="preset-list"></div>
+  </div>
+
+  <!-- ── Step 3: Review names ─────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge inactive">3</div>
+      <div class="card-title">Review Detected Names</div>
+    </div>
+    <div id="emptyState" class="doc-empty">No documents loaded yet. Add one or more .docx files above to begin.</div>
+    <div id="documentList" class="doc-list"></div>
+  </div>
+
+  <!-- ── Status + merge warning ───────────────────────────────────────── -->
+  <div class="card" style="margin-top:16px;">
+    <div id="sideSummary" class="callout ok">
+      <strong>Ready</strong>Upload files to start building per-document name mappings.
+    </div>
+    <div class="divider"></div>
+    <div class="callout warn">
+      <strong>About identity merging</strong>
+      If two names in the same document are mapped to the exact same replacement name,
+      Word will treat those comments and revisions as coming from the same visible author.
+    </div>
+  </div>
+
+</div><!-- /.container -->
+
+<!-- ── Footer ───────────────────────────────────────────────────────── -->
+<footer id="tool-footer" style="max-width:680px; margin:0 auto; padding:28px 20px 48px; display:flex; align-items:center; justify-content:center;">
+  <p style="font-size:12px; color:var(--text-faint); text-align:center; line-height:1.8;">
+    Made by <a href="https://kirinchang.com" target="_blank" rel="noopener noreferrer"
+               style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">Kirin Chang</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/kirinccchang/docx-redline-name-cleaner" target="_blank" rel="noopener noreferrer"
+       style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">GitHub</a>
+    &nbsp;·&nbsp; Free &amp; Open Source (AGPL-3.0)
+    &nbsp;·&nbsp;
+    <a href="https://lawreview.tools/permadrop/" target="_blank" rel="noopener noreferrer"
+       style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">PermaDrop</a>
+    &nbsp;·&nbsp;
+    <a href="https://lawreview.tools/supradrop/" target="_blank" rel="noopener noreferrer"
+       style="color:var(--text-muted); text-decoration:underline; text-underline-offset:2px;">SupraDrop</a>
+  </p>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+
+  const STORAGE_KEY = "redlineNameCleaner.presets";
+  const THEME_STORAGE_KEY = "theme";
+  const XML_FILE_SUFFIX = ".xml";
+  const AUTHOR_TAG_RE = /<[^>]*\bw:author="[^"]*"[^>]*>/g;
+  const AUTHOR_ATTR_RE = /\bw:author="([^"]*)"/;
+  const INITIALS_ATTR_RE = /\bw:initials="([^"]*)"/;
+  const AUTHOR_ATTR_GLOBAL_RE = /\bw:author="([^"]*)"/g;
+
+  const elements = {
+    dropzone: document.getElementById("dropzone"),
+    fileInput: document.getElementById("fileInput"),
+    addFilesBtn: document.getElementById("addFilesBtn"),
+    downloadAllBtn: document.getElementById("downloadAllBtn"),
+    clearAllBtn: document.getElementById("clearAllBtn"),
+    uploadStatus: document.getElementById("uploadStatus"),
+    presetLabel: document.getElementById("presetLabel"),
+    presetValue: document.getElementById("presetValue"),
+    savePresetBtn: document.getElementById("savePresetBtn"),
+    presetStatus: document.getElementById("presetStatus"),
+    presetList: document.getElementById("presetList"),
+    documentList: document.getElementById("documentList"),
+    emptyState: document.getElementById("emptyState"),
+    sideSummary: document.getElementById("sideSummary"),
+    themeToggle: document.querySelector(".dark-toggle")
+  };
+
+  const state = {
+    documents: [],
+    nextId: 1,
+    presets: []
+  };
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function decodeXmlEntities(value) {
+    return String(value)
+      .replace(/&quot;/g, "\"")
+      .replace(/&apos;/g, "'")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&#(\d+);/g, (_, codePoint) => String.fromCodePoint(Number.parseInt(codePoint, 10)))
+      .replace(/&#x([0-9a-fA-F]+);/g, (_, codePoint) => String.fromCodePoint(Number.parseInt(codePoint, 16)))
+      .replace(/&amp;/g, "&");
+  }
+
+  function encodeXmlAttribute(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function normalizeOutputName(value) {
+    return String(value || "").trim();
+  }
+
+  function deriveInitials(name) {
+    const normalized = String(name || "").trim().replace(/\s+/g, " ");
+    if (!normalized) return "";
+
+    const asciiWords = normalized.match(/[A-Za-z0-9]+/g) || [];
+    if (asciiWords.length > 1) {
+      return asciiWords.slice(0, 4).map((word) => word[0].toUpperCase()).join("");
+    }
+
+    if (asciiWords.length === 1 && asciiWords[0].length <= 8) {
+      return asciiWords[0].slice(0, 8);
+    }
+
+    return Array.from(normalized.replace(/\s+/g, "")).slice(0, 4).join("");
+  }
+
+  function getXmlPartNames(zip) {
+    return Object.keys(zip.files).filter((name) => !zip.files[name].dir && name.toLowerCase().endsWith(XML_FILE_SUFFIX));
+  }
+
+  function readAuthorNameFromTag(tag) {
+    const authorMatch = tag.match(AUTHOR_ATTR_RE);
+    if (!authorMatch) return "";
+    return decodeXmlEntities(authorMatch[1]).trim();
+  }
+
+  function collectAuthorCountsFromXml(xml, counts) {
+    for (const match of xml.matchAll(AUTHOR_ATTR_GLOBAL_RE)) {
+      const authorName = decodeXmlEntities(match[1]).trim();
+      if (!authorName) continue;
+      counts.set(authorName, (counts.get(authorName) || 0) + 1);
+    }
+  }
+
+  function sortAuthorsByFrequency(counts) {
+    return Array.from(counts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name));
+  }
+
+  async function analyzeReviewerMetadata(zip) {
+    const counts = new Map();
+
+    for (const partName of getXmlPartNames(zip)) {
+      const xml = await zip.file(partName).async("string");
+      collectAuthorCountsFromXml(xml, counts);
+    }
+
+    return {
+      authors: sortAuthorsByFrequency(counts),
+      totalReferences: Array.from(counts.values()).reduce((sum, count) => sum + count, 0)
+    };
+  }
+
+  function createRenamePlan(documentRecord) {
+    const sourceToTarget = new Map();
+    const targetToInitials = new Map();
+
+    for (const [sourceName, targetName] of getMappingEntries(documentRecord)) {
+      sourceToTarget.set(sourceName, targetName);
+      if (!targetToInitials.has(targetName)) {
+        targetToInitials.set(targetName, deriveInitials(targetName));
+      }
+    }
+
+    if (!sourceToTarget.size) {
+      throw new Error("No name changes are currently queued for this file.");
+    }
+
+    return { sourceToTarget, targetToInitials };
+  }
+
+  function rewriteAuthorTag(tag, renamePlan) {
+    const sourceAuthor = readAuthorNameFromTag(tag);
+    const targetAuthor = renamePlan.sourceToTarget.get(sourceAuthor);
+    if (!targetAuthor) {
+      return { changed: false, tag };
+    }
+
+    let rewrittenTag = tag.replace(
+      AUTHOR_ATTR_RE,
+      `w:author="${encodeXmlAttribute(targetAuthor)}"`
+    );
+
+    if (INITIALS_ATTR_RE.test(rewrittenTag)) {
+      rewrittenTag = rewrittenTag.replace(
+        INITIALS_ATTR_RE,
+        `w:initials="${encodeXmlAttribute(renamePlan.targetToInitials.get(targetAuthor) || "")}"`
+      );
+    }
+
+    return {
+      changed: rewrittenTag !== tag,
+      tag: rewrittenTag,
+      sourceAuthor,
+      targetAuthor
+    };
+  }
+
+  function rewriteXmlPart(xml, renamePlan) {
+    let replacementCount = 0;
+
+    const updatedXml = xml.replace(AUTHOR_TAG_RE, (tag) => {
+      const result = rewriteAuthorTag(tag, renamePlan);
+      if (!result.changed) return tag;
+      replacementCount += 1;
+      return result.tag;
+    });
+
+    return {
+      xml: updatedXml,
+      replacementCount,
+      changed: replacementCount > 0
+    };
+  }
+
+  async function rewriteZipWithPlan(originalBuffer, renamePlan) {
+    const workingZip = await loadZipFromBuffer(originalBuffer);
+    let replacementCount = 0;
+    let changedPartCount = 0;
+
+    for (const partName of getXmlPartNames(workingZip)) {
+      const originalXml = await workingZip.file(partName).async("string");
+      const rewrittenPart = rewriteXmlPart(originalXml, renamePlan);
+
+      if (!rewrittenPart.changed) continue;
+
+      workingZip.file(partName, rewrittenPart.xml);
+      replacementCount += rewrittenPart.replacementCount;
+      changedPartCount += 1;
+    }
+
+    return {
+      workingZip,
+      replacementCount,
+      changedPartCount
+    };
+  }
+
+  function summarizeAuthors(authors) {
+    const total = authors.reduce((sum, author) => sum + author.count, 0);
+    const authorLabel = authors.length === 1 ? "author" : "authors";
+    const refLabel = total === 1 ? "review reference" : "review references";
+    return `${authors.length} ${authorLabel}, ${total} ${refLabel}`;
+  }
+
+  function setUploadStatus(message, tone = "") {
+    elements.uploadStatus.textContent = message || "";
+    elements.uploadStatus.className = tone ? `status ${tone}` : "status";
+  }
+
+  function setPresetStatus(message, tone = "") {
+    elements.presetStatus.textContent = message || "";
+    elements.presetStatus.className = tone ? `status ${tone}` : "status";
+  }
+
+  function setSideSummary(title, body, tone = "ok") {
+    elements.sideSummary.className = `callout ${tone}`;
+    elements.sideSummary.innerHTML = `<strong>${escapeHtml(title)}</strong>${escapeHtml(body)}`;
+  }
+
+  function applyTheme(theme) {
+    const nextTheme = theme === "dark" ? "dark" : "light";
+    document.body.classList.toggle("dark", nextTheme === "dark");
+    if (elements.themeToggle) {
+      elements.themeToggle.textContent = nextTheme === "dark" ? "Light mode" : "Dark mode";
+    }
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    } catch (error) {
+      // Ignore persistence failures; the current session theme still applies.
+    }
+  }
+
+  async function loadZipFromBuffer(buffer) {
+    return window.JSZip.loadAsync(buffer.slice(0));
+  }
+
+  function loadPresets() {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter((preset) => preset && typeof preset.id === "string" && typeof preset.label === "string" && typeof preset.value === "string")
+        .map((preset) => ({
+          id: preset.id,
+          label: preset.label.trim(),
+          value: preset.value.trim()
+        }))
+        .filter((preset) => preset.label && preset.value);
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  }
+
+  function persistPresets() {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.presets));
+  }
+
+  function createDocumentRecord(file, buffer, authors) {
+    return {
+      id: String(state.nextId++),
+      file,
+      originalBuffer: buffer,
+      authors,
+      statusMessage: "",
+      statusTone: "",
+      bulkName: "",
+      presetId: "",
+      mappings: Object.fromEntries(authors.map((author) => [author.name, ""])),
+      selected: Object.fromEntries(authors.map((author) => [author.name, false])),
+      isBusy: false,
+      isExpanded: true
+    };
+  }
+
+  function getDocumentById(id) {
+    return state.documents.find((document) => document.id === id) || null;
+  }
+
+  function getSelectedAuthors(documentRecord) {
+    return documentRecord.authors.filter((author) => documentRecord.selected[author.name]);
+  }
+
+  function getMappingEntries(documentRecord) {
+    return documentRecord.authors
+      .map((author) => {
+        const replacement = normalizeOutputName(documentRecord.mappings[author.name]);
+        return replacement && replacement !== author.name ? [author.name, replacement] : null;
+      })
+      .filter(Boolean);
+  }
+
+  function getFinalName(documentRecord, originalName) {
+    const replacement = normalizeOutputName(documentRecord.mappings[originalName]);
+    return replacement || originalName;
+  }
+
+  function computeMergeGroups(documentRecord) {
+    const groups = new Map();
+    for (const author of documentRecord.authors) {
+      const finalName = getFinalName(documentRecord, author.name);
+      const originals = groups.get(finalName) || [];
+      originals.push(author.name);
+      groups.set(finalName, originals);
+    }
+    return Array.from(groups.entries())
+      .filter(([, originals]) => originals.length > 1)
+      .sort((left, right) => right[1].length - left[1].length || left[0].localeCompare(right[0]));
+  }
+
+  function getDocumentElement(documentId) {
+    return elements.documentList.querySelector(`details[data-document-id="${CSS.escape(documentId)}"]`);
+  }
+
+  function updateDocumentPreview(documentRecord) {
+    const root = getDocumentElement(documentRecord.id);
+    if (!root) return;
+
+    const mergeGroups = computeMergeGroups(documentRecord);
+    const preview = root.querySelector("[data-role='merge-preview']");
+    const status = root.querySelector("[data-role='document-status']");
+
+    if (preview) {
+      preview.className = `callout ${mergeGroups.length ? "warn" : "info"}`;
+      preview.innerHTML = mergeGroups.length
+        ? `<strong>Merge preview</strong>${mergeGroups.map(([finalName, originals]) => {
+          const list = originals.map(escapeHtml).join(", ");
+          return `The output name <code>${escapeHtml(finalName)}</code> would combine ${originals.length} original identities: ${list}.`;
+        }).join("<br>")}`
+        : "<strong>Merge preview</strong>No merged identities are currently detected.";
+    }
+
+    if (status) {
+      status.className = documentRecord.statusTone ? `status ${documentRecord.statusTone}` : "status";
+      status.textContent = documentRecord.statusMessage;
+    }
+  }
+
+  function renderPresets() {
+    elements.presetList.replaceChildren();
+
+    if (!state.presets.length) {
+      const empty = document.createElement("div");
+      empty.className = "doc-empty muted";
+      empty.textContent = "No saved presets yet. Save a name you want to reuse later.";
+      elements.presetList.appendChild(empty);
+      return;
+    }
+
+    for (const preset of state.presets) {
+      const item = document.createElement("div");
+      item.className = "preset-item";
+      item.innerHTML = `
+        <div>
+          <strong>${escapeHtml(preset.label)}</strong>
+          <div class="muted">${escapeHtml(preset.value)}</div>
+        </div>
+        <button type="button" data-action="delete-preset" data-preset-id="${preset.id}">Delete</button>
+      `;
+      elements.presetList.appendChild(item);
+    }
+  }
+
+  function renderDocuments() {
+    elements.documentList.replaceChildren();
+    elements.emptyState.style.display = state.documents.length ? "none" : "block";
+
+    for (const documentRecord of state.documents) {
+      const mergeGroups = computeMergeGroups(documentRecord);
+      const mergeHtml = mergeGroups.length
+        ? mergeGroups.map(([finalName, originals]) => {
+          const list = originals.map(escapeHtml).join(", ");
+          return `The output name <code>${escapeHtml(finalName)}</code> would combine ${originals.length} original identities: ${list}.`;
+        }).join("<br>")
+        : "No merged identities are currently detected.";
+
+      const presetOptions = [
+        '<option value="">Choose a saved preset</option>',
+        ...state.presets.map((preset) => `
+          <option value="${escapeHtml(preset.id)}" ${documentRecord.presetId === preset.id ? "selected" : ""}>
+            ${escapeHtml(preset.label)}
+          </option>
+        `)
+      ].join("");
+
+      const rowsHtml = documentRecord.authors.map((author) => `
+        <tr>
+          <td class="checkbox-cell">
+            <label class="checkbox-wrap">
+              <input
+                type="checkbox"
+                data-action="toggle-author"
+                data-document-id="${documentRecord.id}"
+                data-author="${escapeHtml(author.name)}"
+                ${documentRecord.selected[author.name] ? "checked" : ""}
+              >
+              <span>Select</span>
+            </label>
+          </td>
+          <td>
+            <strong>${escapeHtml(author.name)}</strong>
+            <div class="muted" style="font-size:11px;margin-top:2px;">Leave blank to keep unchanged.</div>
+          </td>
+          <td>
+            <input
+              type="text"
+              value="${escapeHtml(documentRecord.mappings[author.name] || "")}"
+              placeholder="Leave blank to keep original"
+              autocomplete="off"
+              data-action="mapping-input"
+              data-document-id="${documentRecord.id}"
+              data-author="${escapeHtml(author.name)}"
+            >
+          </td>
+          <td class="count-cell">${author.count}</td>
+        </tr>
+      `).join("");
+
+      const details = document.createElement("details");
+      details.className = "doc-card";
+      details.dataset.documentId = documentRecord.id;
+      if (documentRecord.isExpanded) details.open = true;
+
+      details.innerHTML = `
+        <summary>
+          <div class="doc-heading">
+            <div class="doc-title">${escapeHtml(documentRecord.file.name)}</div>
+            <div class="doc-subtitle">${escapeHtml(summarizeAuthors(documentRecord.authors))}</div>
+          </div>
+          <span class="doc-caret"></span>
+        </summary>
+        <div class="doc-body">
+          <div class="mini-toolbar">
+            <div class="field">
+              <label for="bulk-name-${documentRecord.id}">Unified name for selected people</label>
+              <input
+                id="bulk-name-${documentRecord.id}"
+                type="text"
+                value="${escapeHtml(documentRecord.bulkName)}"
+                placeholder="e.g. Princeton Law Review or Professor Smith"
+                autocomplete="off"
+                data-action="bulk-input"
+                data-document-id="${documentRecord.id}"
+              >
+            </div>
+            <button type="button" data-action="apply-bulk" data-document-id="${documentRecord.id}">Apply typed name</button>
+          </div>
+
+          <div class="mini-toolbar">
+            <div class="field">
+              <label for="preset-select-${documentRecord.id}">Saved preset</label>
+              <select id="preset-select-${documentRecord.id}" data-action="preset-select" data-document-id="${documentRecord.id}">
+                ${presetOptions}
+              </select>
+            </div>
+            <button type="button" data-action="apply-preset" data-document-id="${documentRecord.id}">Apply preset</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="checkbox-cell">Select</th>
+                  <th>Original name</th>
+                  <th>Replacement name</th>
+                  <th class="count-cell">Count</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>
+
+          <div class="callout ${mergeGroups.length ? "warn" : "info"}" data-role="merge-preview">
+            <strong>Merge preview</strong>
+            ${mergeHtml}
+          </div>
+
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <button type="button" data-action="select-all" data-document-id="${documentRecord.id}">Select all</button>
+              <button type="button" data-action="select-none" data-document-id="${documentRecord.id}">Select none</button>
+              <button type="button" data-action="clear-mappings" data-document-id="${documentRecord.id}">Clear names</button>
+              <button type="button" data-action="remove-document" data-document-id="${documentRecord.id}">Remove file</button>
+            </div>
+            <button type="button" class="primary" data-action="download-document" data-document-id="${documentRecord.id}" ${documentRecord.isBusy ? "disabled" : ""}>
+              ${documentRecord.isBusy ? "Working…" : "Apply &amp; download"}
+            </button>
+          </div>
+
+          <div class="status ${documentRecord.statusTone}" data-role="document-status">${escapeHtml(documentRecord.statusMessage)}</div>
+        </div>
+      `;
+
+      elements.documentList.appendChild(details);
+    }
+  }
+
+  function updateOverallStatus() {
+    if (!state.documents.length) {
+      setSideSummary("Ready", "Upload files to start building per-document name mappings.");
+      return;
+    }
+    const totalFiles = state.documents.length;
+    const totalAuthors = state.documents.reduce((sum, doc) => sum + doc.authors.length, 0);
+    setSideSummary(
+      "Files loaded",
+      `${totalFiles} file${totalFiles === 1 ? "" : "s"} loaded with ${totalAuthors} detected name identities in total.`
+    );
+  }
+
+  function updateDocumentStatus(documentRecord, message, tone = "") {
+    documentRecord.statusMessage = message;
+    documentRecord.statusTone = tone;
+    renderDocuments();
+  }
+
+  async function parseFiles(fileList) {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+
+    setUploadStatus("Reading document metadata…");
+    const messages = [];
+
+    for (const file of files) {
+      if (!file.name.toLowerCase().endsWith(".docx")) {
+        messages.push(`${file.name}: skipped because it is not a .docx file.`);
+        continue;
+      }
+
+      if (state.documents.some((record) => record.file.name === file.name && record.file.size === file.size && record.file.lastModified === file.lastModified)) {
+        messages.push(`${file.name}: skipped because this file is already loaded.`);
+        continue;
+      }
+
+      try {
+        const buffer = await file.arrayBuffer();
+        const zip = await loadZipFromBuffer(buffer);
+        const metadata = await analyzeReviewerMetadata(zip);
+
+        if (!metadata.authors.length) {
+          messages.push(`${file.name}: no comment or revision names were found.`);
+          continue;
+        }
+
+        const documentRecord = createDocumentRecord(file, buffer, metadata.authors);
+        for (const record of state.documents) record.isExpanded = false;
+        state.documents.push(documentRecord);
+        messages.push(`${file.name}: loaded successfully.`);
+      } catch (error) {
+        console.error(error);
+        messages.push(`${file.name}: could not be opened as a valid .docx archive.`);
+      }
+    }
+
+    renderDocuments();
+    updateOverallStatus();
+    const hasProblem = messages.some((message) => message.includes("skipped") || message.includes("could not") || message.includes("no comment"));
+    setUploadStatus(messages.join(" "), hasProblem ? "err" : "ok");
+  }
+
+  function savePreset() {
+    const label = normalizeOutputName(elements.presetLabel.value);
+    const value = normalizeOutputName(elements.presetValue.value);
+
+    if (!label || !value) {
+      setPresetStatus("Enter both a preset label and a replacement name.", "err");
+      return;
+    }
+
+    const existing = state.presets.find((preset) => preset.label.toLowerCase() === label.toLowerCase());
+    if (existing) {
+      existing.value = value;
+    } else {
+      state.presets.unshift({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        label,
+        value
+      });
+    }
+
+    persistPresets();
+    renderPresets();
+    renderDocuments();
+    elements.presetLabel.value = "";
+    elements.presetValue.value = "";
+    setPresetStatus(`Saved preset "${label}" in this browser.`, "ok");
+  }
+
+  function applyBulkName(documentId) {
+    const documentRecord = getDocumentById(documentId);
+    if (!documentRecord) return;
+
+    const bulkName = normalizeOutputName(documentRecord.bulkName);
+    if (!bulkName) {
+      updateDocumentStatus(documentRecord, "Enter a unified name before applying it.", "err");
+      return;
+    }
+
+    const selectedAuthors = getSelectedAuthors(documentRecord);
+    if (!selectedAuthors.length) {
+      updateDocumentStatus(documentRecord, "Select at least one person before applying the name.", "err");
+      return;
+    }
+
+    for (const author of selectedAuthors) {
+      documentRecord.mappings[author.name] = bulkName;
+    }
+
+    updateDocumentStatus(
+      documentRecord,
+      `Applied ${bulkName} to ${selectedAuthors.length} selected ${selectedAuthors.length === 1 ? "person" : "people"}.`,
+      "ok"
+    );
+  }
+
+  function applySavedPreset(documentId) {
+    const documentRecord = getDocumentById(documentId);
+    if (!documentRecord) return;
+
+    const preset = state.presets.find((item) => item.id === documentRecord.presetId);
+    if (!preset) {
+      updateDocumentStatus(documentRecord, "Choose a saved preset before applying it.", "err");
+      return;
+    }
+
+    documentRecord.bulkName = preset.value;
+    applyBulkName(documentId);
+  }
+
+  async function buildUpdatedBlob(documentRecord) {
+    const renamePlan = createRenamePlan(documentRecord);
+    const { workingZip, replacementCount, changedPartCount } = await rewriteZipWithPlan(documentRecord.originalBuffer, renamePlan);
+
+    if (!replacementCount) {
+      throw new Error("No matching author metadata entries were found to update.");
+    }
+
+    const blob = await workingZip.generateAsync({
+      type: "blob",
+      compression: "DEFLATE",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    });
+
+    return {
+      blob,
+      replacementCount,
+      changedPartCount,
+      downloadName: documentRecord.file.name.replace(/\.docx$/i, "") + "_cleaned.docx"
+    };
+  }
+
+  async function downloadDocument(documentId) {
+    const documentRecord = getDocumentById(documentId);
+    if (!documentRecord) return;
+
+    documentRecord.isBusy = true;
+    documentRecord.statusMessage = "Rewriting comment and revision names…";
+    documentRecord.statusTone = "";
+    renderDocuments();
+
+    try {
+      const { blob, replacementCount, changedPartCount, downloadName } = await buildUpdatedBlob(documentRecord);
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = downloadName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
+
+      documentRecord.statusMessage = `Done. Updated ${replacementCount} review references across ${changedPartCount} XML part${changedPartCount === 1 ? "" : "s"}.`;
+      documentRecord.statusTone = "ok";
+      setSideSummary("Download complete", `${documentRecord.file.name} was exported as ${downloadName}.`, "ok");
+    } catch (error) {
+      console.error(error);
+      documentRecord.statusMessage = `Failed to apply changes: ${error && error.message ? error.message : String(error)}`;
+      documentRecord.statusTone = "err";
+      setSideSummary("Processing failed", `Something went wrong while rewriting ${documentRecord.file.name}.`, "warn");
+    } finally {
+      documentRecord.isBusy = false;
+      renderDocuments();
+    }
+  }
+
+  async function downloadAllEditedFiles() {
+    const eligibleDocuments = state.documents.filter((documentRecord) => getMappingEntries(documentRecord).length > 0);
+    if (!eligibleDocuments.length) {
+      setUploadStatus("There are no queued edits to batch-download yet.", "err");
+      return;
+    }
+
+    elements.downloadAllBtn.disabled = true;
+    setUploadStatus("Building a zip of all edited files…");
+
+    try {
+      const batchZip = new window.JSZip();
+      for (const documentRecord of eligibleDocuments) {
+        const { blob, downloadName } = await buildUpdatedBlob(documentRecord);
+        batchZip.file(downloadName, blob);
+      }
+
+      const zipBlob = await batchZip.generateAsync({ type: "blob", compression: "DEFLATE" });
+      const objectUrl = URL.createObjectURL(zipBlob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = "docx-redline-name-cleaner-batch.zip";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
+
+      setUploadStatus(`Downloaded ${eligibleDocuments.length} edited file${eligibleDocuments.length === 1 ? "" : "s"} as one zip archive.`, "ok");
+      setSideSummary("Batch download complete", `${eligibleDocuments.length} edited files were bundled into one zip archive.`, "ok");
+    } catch (error) {
+      console.error(error);
+      setUploadStatus(`Batch download failed: ${error && error.message ? error.message : String(error)}`, "err");
+      setSideSummary("Batch download failed", "The edited files could not be bundled successfully.", "warn");
+    } finally {
+      elements.downloadAllBtn.disabled = false;
+    }
+  }
+
+  function clearAllDocuments() {
+    state.documents = [];
+    elements.fileInput.value = "";
+    renderDocuments();
+    updateOverallStatus();
+    setUploadStatus("All loaded documents have been cleared.");
+  }
+
+  function handleDocumentListClick(event) {
+    const target = event.target.closest("[data-action]");
+    if (!target) return;
+
+    const { action, documentId } = target.dataset;
+    const documentRecord = getDocumentById(documentId);
+
+    if (action === "remove-document" && documentRecord) {
+      state.documents = state.documents.filter((item) => item.id !== documentId);
+      if (state.documents.length === 1) state.documents[0].isExpanded = true;
+      renderDocuments();
+      updateOverallStatus();
+      return;
+    }
+
+    if (!documentRecord) return;
+
+    if (action === "select-all") {
+      for (const author of documentRecord.authors) documentRecord.selected[author.name] = true;
+      renderDocuments();
+      return;
+    }
+
+    if (action === "select-none") {
+      for (const author of documentRecord.authors) documentRecord.selected[author.name] = false;
+      renderDocuments();
+      return;
+    }
+
+    if (action === "clear-mappings") {
+      for (const author of documentRecord.authors) documentRecord.mappings[author.name] = "";
+      documentRecord.bulkName = "";
+      documentRecord.statusMessage = "Replacement names cleared for this file.";
+      documentRecord.statusTone = "";
+      renderDocuments();
+      return;
+    }
+
+    if (action === "apply-bulk") {
+      applyBulkName(documentId);
+      return;
+    }
+
+    if (action === "apply-preset") {
+      applySavedPreset(documentId);
+      return;
+    }
+
+    if (action === "download-document") {
+      downloadDocument(documentId);
+    }
+  }
+
+  function handleDocumentListInput(event) {
+    const target = event.target;
+    const action = target.dataset.action;
+    const documentId = target.dataset.documentId;
+    const documentRecord = getDocumentById(documentId);
+    if (!documentRecord) return;
+
+    if (action === "mapping-input") {
+      documentRecord.mappings[target.dataset.author] = target.value;
+      documentRecord.statusMessage = "";
+      documentRecord.statusTone = "";
+      updateDocumentPreview(documentRecord);
+      return;
+    }
+
+    if (action === "bulk-input") {
+      documentRecord.bulkName = target.value;
+      return;
+    }
+
+    if (action === "preset-select") {
+      documentRecord.presetId = target.value;
+      return;
+    }
+
+    if (action === "toggle-author") {
+      documentRecord.selected[target.dataset.author] = Boolean(target.checked);
+      updateDocumentPreview(documentRecord);
+    }
+  }
+
+  function handleDocumentToggle(event) {
+    const details = event.target.closest("details[data-document-id]");
+    if (!details) return;
+    const documentRecord = getDocumentById(details.dataset.documentId);
+    if (!documentRecord) return;
+    documentRecord.isExpanded = details.open;
+  }
+
+  function handlePresetListClick(event) {
+    const target = event.target.closest("[data-action='delete-preset']");
+    if (!target) return;
+
+    const presetId = target.dataset.presetId;
+    state.presets = state.presets.filter((preset) => preset.id !== presetId);
+    persistPresets();
+
+    for (const documentRecord of state.documents) {
+      if (documentRecord.presetId === presetId) {
+        documentRecord.presetId = "";
+      }
+    }
+
+    renderPresets();
+    renderDocuments();
+    setPresetStatus("Preset removed from this browser.");
+  }
+
+  elements.dropzone.addEventListener("click", () => elements.fileInput.click());
+  elements.addFilesBtn.addEventListener("click", () => elements.fileInput.click());
+  elements.downloadAllBtn.addEventListener("click", downloadAllEditedFiles);
+  elements.clearAllBtn.addEventListener("click", clearAllDocuments);
+  elements.savePresetBtn.addEventListener("click", savePreset);
+  elements.themeToggle?.addEventListener("click", () => {
+    applyTheme(document.body.classList.contains("dark") ? "light" : "dark");
+  });
+
+  elements.dropzone.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    elements.dropzone.classList.add("dragover");
+  });
+
+  elements.dropzone.addEventListener("dragleave", () => {
+    elements.dropzone.classList.remove("dragover");
+  });
+
+  elements.dropzone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    elements.dropzone.classList.remove("dragover");
+    parseFiles(event.dataTransfer.files);
+  });
+
+  elements.fileInput.addEventListener("change", (event) => {
+    parseFiles(event.target.files);
+    elements.fileInput.value = "";
+  });
+
+  elements.documentList.addEventListener("click", handleDocumentListClick);
+  elements.documentList.addEventListener("input", handleDocumentListInput);
+  elements.documentList.addEventListener("change", handleDocumentListInput);
+  elements.documentList.addEventListener("toggle", handleDocumentToggle, true);
+  elements.presetList.addEventListener("click", handlePresetListClick);
+
+  state.presets = loadPresets();
+  applyTheme(document.body.classList.contains("dark") ? "dark" : "light");
+  renderPresets();
+  renderDocuments();
+  updateOverallStatus();
+
+  if (!window.JSZip) {
+    elements.dropzone.disabled = true;
+    elements.addFilesBtn.disabled = true;
+    elements.downloadAllBtn.disabled = true;
+    elements.savePresetBtn.disabled = true;
+    setUploadStatus("JSZip failed to load. Confirm that assets/vendor/jszip.min.js is present in the repository.", "err");
+    setSideSummary("Library unavailable", "The page could not load JSZip, so .docx processing is currently disabled.", "warn");
+  }
+})();
+</script>
+</body>
+</html>
