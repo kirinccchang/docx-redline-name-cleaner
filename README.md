@@ -64,9 +64,10 @@ Redline Name Cleaner is one tool in the **[lawreview.tools](https://lawreview.to
 | **[Zotero Perma Archiver](https://lawreview.tools/zotero)** | Auto-archives URLs to perma.cc as you save items in Zotero | While writing |
 | **[PermaDrop](https://lawreview.tools/permadrop/)** | Batch-archives all URLs in a `.docx` to perma.cc | Before submission |
 | **[SupraDrop](https://lawreview.tools/supradrop/)** | Audits citation logic across all footnotes | Before submission |
+| **[cite.review](https://cite.review)** | Verify citations in legal writing: catch hallucinated authorities before filing | Before submission |
 | **Redline Name Cleaner** | Standardizes visible review identities in comments and tracked changes | Before circulation |
 
-Typical workflow: Zotero Perma Archiver while researching → PermaDrop to archive remaining URLs → SupraDrop to catch citation errors → Redline Name Cleaner to clean visible review identities before circulation or submission.
+Typical workflow: Zotero Perma Archiver while researching → PermaDrop to archive remaining URLs → SupraDrop to catch citation errors → cite.review to verify citations → Redline Name Cleaner to clean visible review identities before circulation or submission.
 
 ## Maintenance
 
